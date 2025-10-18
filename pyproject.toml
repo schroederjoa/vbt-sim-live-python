@@ -1,0 +1,11 @@
+[project]
+name = "vbt-sim-live-python"
+version = "0.1.0"
+description = "Concept to implement vectorbt pro indicators and strategies that can be used for both simulation and live trading"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy-indexed>=0.3.7",
+    "pandas>=2.3.3",
+    "ta-lib>=0.6.7",
+]
