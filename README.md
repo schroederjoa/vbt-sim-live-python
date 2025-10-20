@@ -13,4 +13,4 @@ Using vectorbt pro now for approximately two years to backtest my trading strate
 6. 1m source data (and updates) will be used to calculate and update higher intraday timeframes, where 1d source data is used for 1d and higher (weekly, monthly)
 
 ## Run examples
-You will need a vbt pro installation. Check [pyproject.toml](pyproject.toml) for further dependencies. Read the description in [Test_VBT_Minute.py](Test_VBT_Minute.py) and run it as either simulation or live example.
+You will need a vbt pro installation. Check [pyproject.toml](pyproject.toml) for further dependencies. Read the description in [examples/Test_VBT_Minute.py](examples/Test_VBT_Minute.py) and run it as either simulation or live example.
