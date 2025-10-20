@@ -3,7 +3,7 @@
 import datetime
 import numpy as np
 import pandas as pd
-from tfs import TFs
+from .tfs import TFs
 import vectorbtpro as vbt
 
 # Feature definition for standard OHLCV, including types for creating np arrays and default values
