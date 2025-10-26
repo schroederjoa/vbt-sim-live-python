@@ -1,7 +1,7 @@
 
 
-from indicator_root import IndicatorRoot
-from indicator_utils import indicator_strategy_vbt_caller
+from .indicator_root import IndicatorRoot
+from .indicator_utils import indicator_strategy_vbt_caller
 import numpy as np
 import talib
 import vectorbtpro as vbt

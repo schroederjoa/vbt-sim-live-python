@@ -8,14 +8,14 @@ import pandas as pd
 import pytz
 from typing import Dict, List
 from vbt_sim_live import GenericData, TFs
-import vectorbtpro_helpers as vbth
-		
+from .vectorbtpro_helpers import is_last_day_of_week, is_last_day_of_month
+	
 class LiveData(GenericData):
 
 	"""Data class that can holds live data in form of numpy arrays""" 
 
-	def __init__(self, data, symbol, timeframe, tz):
-		super().__init__(data, symbol, timeframe, tz)
+	def __init__(self, data, symbol, timeframe, tz, log_handler = None):
+		super().__init__(data, symbol, timeframe, tz, log_handler)
 		
 	@classmethod		
 	def from_barlist(cls, bars, timeframe, tz = 'America/New_York'):
@@ -36,7 +36,7 @@ class LiveData(GenericData):
 	)
 
 	@classmethod		
-	def from_df(cls, df: pd.DataFrame, symbol: str, timeframe: TFs, tz = 'America/New_York'):
+	def from_df(cls, df: pd.DataFrame, symbol: str, timeframe: TFs, tz: str = 'America/New_York', log_handler = None):
 
 		"""This method creates a LiveData object based on
 		df: DataFrame with input data, needs to have correct feature names and date as index
@@ -53,7 +53,8 @@ class LiveData(GenericData):
 			data = data,
 			symbol = symbol,
 			timeframe = timeframe,
-			tz = tz
+			tz = tz,
+			log_handler = log_handler
 	)
 
 	def add_feature(self, feature_name: str, feature_data: np.ndarray) -> None:
@@ -82,9 +83,9 @@ class LiveData(GenericData):
 	
 	def get_row_range(self, idx_range: range, date_as_datetime=False, tz_convert=False, as_dict=False) -> List[Dict] | List[np.ndarray]:
 		
-		"""This function will return a number of rows of all data arrays, defined by an index rang idx_range.
+		"""This function will return a number of rows of all data arrays, defined by an index range idx_range.
 		date_as_datetime: specifies whether date and date_l columns should be converted to datetime or unix timestamp [s]
-		tz_convert: specifies whether timezone conversion should be performed in case of date_as_datetime=True.
+		tz_convert: specifies what timezone conversion should be performed in case of date_as_datetime=True.
 		as_dict: specified whether to export data as list of np arrays or as list of dicts.
 		"""
 		
@@ -98,8 +99,8 @@ class LiveData(GenericData):
 		
 		if date_as_datetime:
 			if tz_convert:
-				data[0] = [datetime.datetime.utcfromtimestamp(d).astimezone(pytz.timezone(self.tz)) for d in data[0].astype('datetime64[s]').astype('int64')]
-				data[1] = [datetime.datetime.utcfromtimestamp(d).astimezone(pytz.timezone(self.tz)) for d in data[1].astype('datetime64[s]').astype('int64')]
+				data[0] = [datetime.datetime.fromtimestamp(d, datetime.timezone.utc).astimezone(pytz.timezone(self.tz)) for d in data[0].astype('datetime64[s]').astype('int64')]
+				data[1] = [datetime.datetime.fromtimestamp(d, datetime.timezone.utc).astimezone(pytz.timezone(self.tz)) for d in data[1].astype('datetime64[s]').astype('int64')]
 
 			else:
 				data[0] = data[0].astype('datetime64[s]').tolist()
@@ -198,13 +199,13 @@ class LiveData(GenericData):
 			ret['date'] = ((keys * timeframe.value + 345600-604800) * 10**9 ).astype('datetime64[ns]')
 			last_date = pd.Timestamp(ret['date_l'][-1]).to_pydatetime('utc')
 			
-			last_candle_complete = vbth.is_last_day_of_week(last_date)
+			last_candle_complete = is_last_day_of_week(last_date)
 			
 		elif timeframe.name == 'M1':
 			ret['date'] = (keys * 10**9).astype('datetime64[ns]')#.astype('int64')	
 			last_date = pd.Timestamp(ret['date_l'][-1]).to_pydatetime('utc')
 			
-			last_candle_complete = vbth.is_last_day_of_month(last_date)
+			last_candle_complete = is_last_day_of_month(last_date)
 
 		else:
 			self.log.error("Error resample(), no valid timeframe for resamling, aborting", timeframe)
@@ -226,7 +227,7 @@ class LiveData(GenericData):
 				'cpl': ret['cpl'][-1],
 			}
 		else:
-			return LiveData(ret, self.symbol, timeframe, self.tz)
+			return LiveData(ret, self.symbol, timeframe, self.tz, self.log_handler)
 
 	def realign(self, data_source, realign_info: dict, update: bool = False) -> None:
 
@@ -258,7 +259,7 @@ class LiveData(GenericData):
 					realign_to_values[-1] = realign_from_values[-1]
 					
 				else:
-					print("Realigning", r)
+					self.log("Realigning", r)
 	
 					# create dataframe "to" with date and key
 					df_to = pd.DataFrame()
@@ -317,7 +318,7 @@ class LiveData(GenericData):
 		indicators = []
 		
 		for i in info.items():
-			print("Preparing indicator/strategy",i, "for timeframe", self.timeframe)
+			self.log("Preparing indicator/strategy",i, "for timeframe", self.timeframe)
 			
 			# get indicator classes
 			vbt_indicator = getattr(inst, i[0])
@@ -410,7 +411,7 @@ class LiveData(GenericData):
 		roll = True
 	
 		if len(self.data['date']):
-		
+					
 			if row_dict['date'] < self.data['date'][-1]:
 				# abort if outdated info comes in
 				return False, False

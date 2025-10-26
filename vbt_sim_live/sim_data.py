@@ -4,15 +4,15 @@ import indicators as inst
 import pandas as pd
 import numpy as np
 import vectorbtpro as vbt
-import vectorbtpro_helpers as vbth
+from .vectorbtpro_helpers import get_target_index
 from vbt_sim_live import GenericData, TFs
  
 class SimData(GenericData):
 
 	"""Data class that can holds sim data in form of a vbt.Data class""" 
     
-	def __init__(self, data, symbol, timeframe, tz):
-		super().__init__(data, symbol, timeframe, tz)
+	def __init__(self, data, symbol, timeframe, tz, log_handler = None):
+		super().__init__(data, symbol, timeframe, tz, log_handler)
   
 	@classmethod		
 	def from_barlist(cls, bars, timeframe, tz = 'America/New_York'):
@@ -31,7 +31,7 @@ class SimData(GenericData):
 	)
 
 	@classmethod		
-	def from_df(cls, df: pd.DataFrame, symbol: str, timeframe: TFs, tz = 'America/New_York'):
+	def from_df(cls, df: pd.DataFrame, symbol: str, timeframe: TFs, tz = 'America/New_York', log_handler = None):
 
 		"""This method creates a LiveData object based on
 		df: DataFrame with input data, needs to have correct feature names and date as index
@@ -44,7 +44,8 @@ class SimData(GenericData):
 			data = vbt.Data.from_data(df, single_key=True, tz_convert=None),
 			symbol = symbol,
 			timeframe = timeframe,
-			tz = tz
+			tz = tz,
+			log_handler = log_handler
 	)
 	
 	def get_dtype(self, feature_name: str) -> pd.Series.dtype:
@@ -107,7 +108,7 @@ class SimData(GenericData):
 		elif timeframe == self.timeframe:
 			raise Exception("source and target timeframes cannot be same", timeframe, self.timeframe)
 
-		print("resampling")
+		self.log("resampling")
 		# temporarily set date_l to int for proper resampling
 		date_l = self.data.get('date_l').astype('int64')
 			
@@ -123,7 +124,7 @@ class SimData(GenericData):
 		# e.g. a missing 19:50 candle on the 1m still needs to create a 19:50 5m candle.
 		
 		if timeframe.is_intraday():
-			data_resampled = self.data.resample(vbth.get_target_index(self.data.index, timeframe), timeframe.flip())
+			data_resampled = self.data.resample(get_target_index(self.data.index, timeframe), timeframe.flip())
 		else:
 			data_resampled = self.data.resample(timeframe.flip())
 
@@ -141,7 +142,7 @@ class SimData(GenericData):
 		date_l = self.data.get('date_l').astype('datetime64[ns]')
 		self.data = self.data.remove_features('date_l').add_feature('date_l', date_l)
 				
-		return SimData(data_resampled, self.symbol, timeframe, self.tz)
+		return SimData(data_resampled, self.symbol, timeframe, self.tz, self.log_handler)
 
 
 	def realign(self, data_source, realign_info: dict) -> None:
@@ -164,7 +165,7 @@ class SimData(GenericData):
 			# consider only realign info that is relevant for these two timeframes involved			
 			if r['from'] == data_source.timeframe.name and r['to'] == self.timeframe.name:
 				
-				print("Realigning", r)
+				self.log("Realigning", r)
 				
 				realign_from_date = data_source.get_feature('date')			
 				realign_from_values = data_source.get_feature(r['feature'])
@@ -213,7 +214,7 @@ class SimData(GenericData):
 		"""	
 		
 		for i in info.items():
-			print("Preparing indicator/strategy",i, "for timeframe", self.timeframe)
+			self.log("Preparing indicator/strategy",i, "for timeframe", self.timeframe)
 			
 			vbt_indicator = getattr(inst, i[0])
 
@@ -280,7 +281,7 @@ class SimData(GenericData):
 		date_range = slice(simulation_parameters['start'],simulation_parameters['end'])
 
 		for strategy in self.strategy_info.keys():
-			print("Simulating strategy", strategy, "from", simulation_parameters['start'], "to", simulation_parameters['end'])
+			self.log("Simulating strategy", strategy, "from", simulation_parameters['start'], "to", simulation_parameters['end'])
 
 			vbt_indicator = getattr(inst, strategy)
 			strategy_short_name = vbt_indicator.short_name
@@ -343,9 +344,9 @@ class SimData(GenericData):
 				'expectancy',
 			], agg_func=None)
 
-			print("Statistics","\n",stats)
+			self.log("Statistics","\n",stats)
 			
 			orders = pf.orders.records_readable
 			
-			print("Orders","\n",orders)
+			self.log("Orders","\n",orders)
 			

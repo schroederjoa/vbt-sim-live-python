@@ -123,6 +123,6 @@ class TesterLive:
 		
 if __name__ == "__main__":
 
-	t = TesterSim()
-	#t = TesterLive()
+	#t = TesterSim()
+	t = TesterLive()
 	t.run()

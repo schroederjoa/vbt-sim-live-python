@@ -1,11 +1,11 @@
 
 
-from indicator_root import IndicatorRoot
-from indicator_utils import indicator_strategy_vbt_caller
+from .indicator_root import IndicatorRoot
+from .indicator_utils import indicator_strategy_vbt_caller
 import numpy as np
 import pandas as pd
+from vbt_sim_live import vectorbtpro_helpers as vbth
 import vectorbtpro as vbt
-import vectorbtpro_helpers as vbth
 
 def find_runs(x):
     """Find runs of consecutive items in an array."""

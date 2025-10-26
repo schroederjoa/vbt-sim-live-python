@@ -99,7 +99,7 @@ class TesterSim:
 		
 		# create ohlc data for timeframes of interest
 		# m1 data is coming from the source, other timeframes are resampled from m1		
-		sim_data['m1'] = SimData.from_df(df, symbol, TFs['m1'])
+		sim_data['m1'] = SimData.from_df(df, symbol, TFs['m1'], log_handler=print)
 		sim_data['m5'] = sim_data['m1'].resample(TFs['m5'])
 		sim_data['m30'] = sim_data['m1'].resample(TFs['m30'])
 		
@@ -151,7 +151,7 @@ class TesterLive:
 				
 		symbol = "NVDA"
 		
-		# split up the source data so we can use part of it for preparation (bact calculation)
+		# split up the source data so we can use part of it for preparation
 		# and the other part to feed updates
 		df_pre = df[:-1000]
 		df_update = df[-1000:]
@@ -161,7 +161,7 @@ class TesterLive:
 
 		# create ohlc data for timeframes of interest
 		# m1 data is coming from the source, other timeframes are resampled from m1
-		live_data['m1'] = LiveData.from_df(df_pre, symbol, TFs['m1'])
+		live_data['m1'] = LiveData.from_df(df_pre, symbol, TFs['m1'], log_handler=print)
 		live_data['m5'] = live_data['m1'].resample(TFs['m5'])
 		live_data['m30'] = live_data['m1'].resample(TFs['m30'])
 

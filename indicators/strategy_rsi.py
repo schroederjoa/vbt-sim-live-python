@@ -1,6 +1,6 @@
 
-from indicator_root import IndicatorRoot
-from indicator_utils import get_strategy_standard_output_names, get_strategy_feature_info, indicator_strategy_vbt_caller
+from .indicator_root import IndicatorRoot
+from .indicator_utils import get_strategy_standard_output_names, get_strategy_feature_info, indicator_strategy_vbt_caller
 import numpy as np
 import vectorbtpro as vbt
 

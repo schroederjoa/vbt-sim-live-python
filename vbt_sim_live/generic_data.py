@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
+from collections.abc import Callable
 import datetime
 import numpy as np
 import pandas as pd
 from .tfs import TFs
 import vectorbtpro as vbt
+
+ENABLE_DEBUG = False
 
 # Feature definition for standard OHLCV, including types for creating np arrays and default values
 # in addition, we use date_l to represent the latest timestamp of an update (where date is more like an id of that candle)
@@ -27,11 +30,12 @@ class GenericData():
 	It only affects the output when calling to_df or get_row_range methods of child classes.
 	""" 
    
-	def __init__(self, data: vbt.Data | dict, symbol: str, timeframe: TFs, tz: str):
+	def __init__(self, data: vbt.Data | dict, symbol: str, timeframe: TFs, tz: str, log_handler: Callable):
 		self.data = data
 		self.symbol = symbol
-		self.tz = tz
 		self.timeframe = timeframe
+		self.tz = tz
+		self.log_handler = log_handler
 		self.feature_info = []
 		self.feature_names = []
 		
@@ -91,7 +95,9 @@ class GenericData():
 			df.index = pd.to_datetime(df.index, utc=True).values
 		
 		return df
-		
+
+	def log(self, *text):
+		if self.log_handler is not None: self.log_handler(*text)		
 
 	def add_feature_info(self, info: list) -> None:
 		
@@ -101,7 +107,7 @@ class GenericData():
 			if i['name'] in self.feature_names:
 				raise Exception("Feature name already exists", i['name'])
 			else:
-				print("Adding feature info", i, "to", self.timeframe)
+				self.log("Adding feature info", i, "to", self.timeframe)
 				self.feature_info.append(i)	
 				self.feature_names = [f['name'] for f in self.feature_info]
 		
@@ -166,7 +172,7 @@ class GenericData():
 		if self.timeframe.name not in info.keys():
 			raise Exception("No indicator info available for timeframe", self.timeframe)
 			
-		print('Setting indicator info', info[self.timeframe.name])
+		self.log('Setting indicator info', info[self.timeframe.name])
 		self.indicator_info = info[self.timeframe.name]
 
 	def set_strategies(self, info: dict) -> None:
@@ -192,7 +198,7 @@ class GenericData():
 		if self.timeframe.name not in info.keys():
 			raise Exception("No strategy info available for timeframe", self.timeframe)
 			
-		print('Setting strategy info', info)
+		self.log('Setting strategy info', info)
 		self.strategy_info = info[self.timeframe.name]
 
 	def prepare_indicators(self, run_args: dict = {}) -> None:
