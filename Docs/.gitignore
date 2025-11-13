@@ -1,0 +1,4 @@
+**/__pycache__/*
+/examples/live_data*.csv
+/examples/sim_data*.csv
+uv.lock

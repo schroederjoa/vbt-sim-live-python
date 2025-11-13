@@ -1,0 +1,39 @@
+[project]
+name = "vbt-sim-live-python"
+version = "0.1.0"
+description = "Concept to implement vectorbt pro indicators and strategies that can be used for both simulation and live trading"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    # Core data processing
+    "numpy>=1.24.0",
+    "pandas>=2.3.3",
+    "numpy-indexed>=0.3.7",
+
+    # Technical analysis
+    "ta-lib>=0.6.7",
+
+    # VectorBT (backtesting framework)
+    "vectorbtpro>=0.25.0",
+
+    # Databento (CME data)
+    "databento>=0.17.0",
+
+    # Parquet support (efficient data storage)
+    "pyarrow>=12.0.0",
+
+    # Environment variables (API keys)
+    "python-dotenv>=1.0.0",
+
+    # Date/time utilities
+    "pytz>=2024.1",
+]
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["vbt_sim_live*", "indicators*"]
+exclude = ["examples*", "Databento*"]
